@@ -1,0 +1,47 @@
+{
+  "design": {
+    "page_bg": "#0a0a0f",
+    "container_pt_pc": 60,
+    "container_pt_mobi": 40,
+    "fonts": ["Inter", "Montserrat"],
+    "primaryColor": "#7c3aed",
+    "accentColor": "#22d3ee"
+  },
+  "pages": {
+    "index": {
+      "title": "My Taplux Site",
+      "description": "Добро пожаловать",
+      "design": {
+        "theme": "dark",
+        "page_bg": "#0a0a0f",
+        "container_pt_pc": 60,
+        "container_pt_mobi": 40,
+        "fonts": ["Inter", "Montserrat"],
+        "primaryColor": "#7c3aed",
+        "accentColor": "#22d3ee"
+      },
+      "blocks": [
+        {
+          "id": "block-avatar-1",
+          "type": "avatar",
+          "image": "",
+          "name": "Your Name",
+          "subtitle": "Taplux template · edit me"
+        },
+        {
+          "id": "block-text-1",
+          "type": "text",
+          "content": "Открой admin.html, чтобы редактировать эту страницу через визуальный конструктор."
+        }
+      ]
+    },
+    "admin": {
+      "title": "Admin",
+      "blocks": []
+    }
+  },
+  "license": {
+    "key": "",
+    "tier": "starter"
+  }
+}
