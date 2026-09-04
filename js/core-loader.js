@@ -24,7 +24,7 @@
 
   // ── Configuration ──────────────────────────────────────────────────
   var CDN_BASE = 'https://taplux-cdn.vercel.app/dist';
-  var VERSION  = '0.1.0';
+  var VERSION  = '0.1.1';
   var CACHE_KEY    = 'taplux-core-cache';
   var VERSION_KEY  = 'taplux-core-version';
   var STORAGE_FLAG = 'data-taplux-core';
