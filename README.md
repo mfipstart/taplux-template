@@ -4,14 +4,16 @@
 
 ## 🚀 Запуск за 3 шага
 
-### 1. Используй этот template
-Нажми зелёную кнопку **"Use this template"** → **"Create a new repository"** вверху страницы GitHub. Это создаст твою копию репозитория.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmfipstart%2Ftaplux-template)
 
-### 2. Задеплой на Vercel
-Зайди на [vercel.com/new](https://vercel.com/new), выбери свой новый репо и нажми **Deploy**. Через 30 секунд получишь публичную ссылку вида `my-taplux-site.vercel.app`.
+### 1. Задеплой на Vercel
+Нажми на кнопку **Deploy with Vercel** выше. Vercel предложит подключить твой GitHub аккаунт, автоматически создаст у тебя копию репозитория (введи желаемое имя) и сразу же развернет сайт. Через 30 секунд ты получишь публичную ссылку вида `my-taplux-site.vercel.app`.
 
-### 3. Открой админку
-Перейди по адресу `https://my-taplux-site.vercel.app/admin.html` (или добавь `?admin=1` к основному URL). Введи свой GitHub Personal Access Token, чтобы редактировать контент через визуальный конструктор.
+### 2. Открой админку
+Перейди по адресу `https://my-taplux-site.vercel.app/admin.html` (или добавь `?admin=1` к основному URL). Введи свой GitHub Personal Access Token (инструкция ниже), чтобы редактировать контент через визуальный конструктор.
+
+### 3. Введи лицензионный ключ
+Если ты приобрел тариф **PRO** или **Premium**, зайди в админке во вкладку **«Настройки»**, введи свой ключ в поле "Лицензионный ключ" и нажми "Сохранить". После обновления страницы все PRO-блоки будут разблокированы!
 
 ## ✏️ Что внутри
 
