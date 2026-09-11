@@ -1,59 +1,116 @@
-# Taplux — Premium Mobile Landing Constructor
+# Taplux Template
 
-Создай мобильный лендинг за 5 минут. Без бэкенда, без билдов, без регистрации.
-
-## 🚀 Запуск за 3 шага
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmfipstart%2Ftaplux-template)
-
-### 1. Задеплой на Vercel
-Нажми на кнопку **Deploy with Vercel** выше. Vercel предложит подключить твой GitHub аккаунт, автоматически создаст у тебя копию репозитория (введи желаемое имя) и сразу же развернет сайт. Через 30 секунд ты получишь публичную ссылку вида `my-taplux-site.vercel.app`.
-
-### 2. Открой админку
-Перейди по адресу `https://my-taplux-site.vercel.app/admin.html` (или добавь `?admin=1` к основному URL). Введи свой GitHub Personal Access Token (инструкция ниже), чтобы редактировать контент через визуальный конструктор.
-
-### 3. Введи лицензионный ключ
-Если ты приобрел тариф **PRO** или **Premium**, зайди в админке во вкладку **«Настройки»**, введи свой ключ в поле "Лицензионный ключ" и нажми "Сохранить". После обновления страницы все PRO-блоки будут разблокированы!
-
-## ✏️ Что внутри
-
-- `index.html` — публичная страница, рендерится ядром Taplux
-- `admin.html` — визуальный конструктор (drag-and-drop блоки, настройка дизайна)
-- `js/core-loader.js` — тонкий загрузчик (3 КБ), тянет ядро с CDN
-- `data.json` — контент твоего лендинга
-- `vercel.json` — SPA rewrites для мульти-страниц
-
-## 🔐 GitHub Personal Access Token
-
-Нужен, чтобы админка могла сохранять изменения в `data.json` через GitHub API.
-
-1. Открой [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
-2. **Generate new token** → Fine-grained
-3. **Repository access**: Only select repositories → выбери свой `my-taplux-site`
-4. **Permissions**: Contents = Read and Write
-5. Скопируй токен (покажется только один раз)
-6. Вставь в админку при первом входе
-
-## 🧱 Что умеет
-
-- 12 готовых блоков: avatar, link, text, divider, socials, banner, banner_pro, lists_pro, split_pro, hero_pro, offer_pro, qa, video, icon_text
-- Drag-and-drop конструктор
-- Multi-page (несколько страниц в одном деплое)
-- Кастомные шрифты, цвета, отступы
-- Live Preview при редактировании
-
-## 📦 Лицензия
-
-Шаблон бесплатный. Ядро конструктора (Taplux Core) лицензируется отдельно — тарифы **Starter / Pro / Premium**.
-
-После покупки ключ вводится в админке. PRO-блоки становятся доступны сразу.
-
-## 🔗 Полезные ссылки
-
-- [Vercel Deploy](https://vercel.com/new) — деплой за 30 сек
-- [GitHub PAT](https://github.com/settings/tokens?type=beta) — токен для админки
-- [Документация Taplux](https://taplux.ru) — скоро
+Your Taplux site. Vanilla HTML/CSS/JS + Core-as-Service: the constructor logic
+lives on Taplux's CDN and loads via `js/core-loader.js` (the only code file in
+this repo).
 
 ---
 
-**Taplux** · сделано с ❤ для инста-блогеров, экспертов и малого бизнеса.
+## 🚀 Quick Start
+
+1. **Use this template** — click "Use this template" on GitHub to create your own repo.
+2. **Fill in `_meta.github_repo`** in `data.json` (see below).
+3. **Deploy to Vercel** — import the repo, click Deploy. Your site is live at `your-repo.vercel.app`.
+4. **Manage content** at **[admin.taplux.ru](https://admin.taplux.ru)** using your license key (no PAT, no local admin — all through Hosted Admin).
+
+---
+
+## 🔑 Step 1: Set your GitHub repository in `data.json`
+
+Open `data.json` and replace the placeholder in the `_meta` block:
+
+```json
+{
+  "_meta": {
+    "github_repo": "your-username/your-repo-name"
+  },
+  ...
+}
+```
+
+Use the format `owner/repo` (e.g. `mfipstart/my-taplux-site`).
+**This is required** — without it, the constructor will refuse to load.
+
+> **Where do I get this?** It's the `owner/repo` part of your GitHub URL:
+> `https://github.com/`**`your-username/your-repo-name`**`/`
+
+---
+
+## 🌍 Multi-Site Setup: one repo → many Vercel projects
+
+**Need 10 different landing pages for 10 affiliate programs? No problem.**
+
+Taplux licenses bind to a GitHub repository, not to a domain. So one repo
+= one license, and you can create as many Vercel projects as you want
+from the same repo.
+
+### Structure
+
+```
+your-taplux-repo/
+├── sites/
+│   ├── arb-1/                  ← Vercel Project "arb-1"
+│   │   ├── index.html
+│   │   ├── data.json
+│   │   └── vercel.json
+│   ├── arb-2/                  ← Vercel Project "arb-2"
+│   │   ├── index.html
+│   │   ├── data.json
+│   │   └── vercel.json
+│   └── arb-3/
+│       └── ...
+└── README.md
+```
+
+### How to add a new site
+
+1. **In GitHub**: create a folder `sites/your-site-name/` and copy `index.html` + `data.json` + `vercel.json` from any existing site (or from the template root).
+2. **Edit `data.json`** inside that folder — set `_meta.github_repo` to the same `owner/repo` as your main site.
+3. **In Vercel**: New Project → Import `your-taplux-repo` → in "Configure Project" set **Root Directory** to `sites/your-site-name`. Click Deploy.
+4. **Edit content** at `admin.taplux.ru` — the Hosted Admin will let you pick which site to manage.
+
+All sites deploy from the same GitHub repo (one commit → all redeploy), all
+share the same license, and each can have its own multi-page structure
+(`/page1`, `/page2`, etc.).
+
+### URL Slug Multi-Page (per site)
+
+Each Vercel project supports URL slugs (multi-page) independently. The
+`vercel.json` rewrites everything to `index.html` for SPA routing:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+Inside `data.json`, define pages with their slugs (`index`, `about`,
+`contacts`, etc.) — they'll be accessible as `/`, `/about`, `/contacts`.
+
+---
+
+## 📂 What's where
+
+- `data.json` — your content (blocks, pages, design, license).
+- `index.html` — minimal shell, loads the core via `js/core-loader.js`.
+- `vercel.json` — SPA rewrites for URL slugs.
+- `js/core-loader.js` — thin loader that fetches the licensed core bundle from the Taplux CDN.
+
+---
+
+## 🆘 Troubleshooting
+
+- **"License is not bound to any repository"** — you forgot to set `_meta.github_repo` in `data.json`. See Step 1.
+- **"License is bound to another repository"** — the `github_repo` in `data.json` doesn't match what the License Server has. Check spelling, check the Hosted Admin dashboard.
+- **"Invalid origin for this repository"** — you're opening the site from a non-Vercel domain. Use the `*.vercel.app` URL Vercel gave you, or `localhost` for local dev.
+- **Multi-page (URL slugs) not working** — make sure `vercel.json` is in the same folder as `index.html` for that site.
+
+---
+
+## 📖 More info
+
+- Taplux landing: [https://taplux.ru](https://taplux.ru)
+- Hosted Admin: [https://admin.taplux.ru](https://admin.taplux.ru)
+- Plan & strategy (Obsidian Brain): `Taplux — Phase M5 Multi-Site лицензирование.md`

@@ -22,31 +22,85 @@
 (function () {
   'use strict';
 
-  // ── Configuration ──────────────────────────────────────────────────
+  // ── Configuration ────────────────────────────────────────────────
   var CDN_BASE = 'https://taplux-cdn.vercel.app/dist';
-  var VERSION  = '0.1.1';
-  var CACHE_KEY    = 'taplux-core-cache';
+  var VERSION  = '0.1.5';
+  var CACHE_PREFIX = 'taplux-core-cache_';
   var VERSION_KEY  = 'taplux-core-version';
   var STORAGE_FLAG = 'data-taplux-core';
 
-  // ── Cache helpers (offline fallback) ──────────────────────────────
-  function getCache() {
+  // ── Helper: resolve license context (key + github_repo) ──────────
+  // Phase M5: для GitHub-Repo Binding нужно знать и ключ, и github_repo.
+  // Возвращает { key: string, githubRepo: string }.
+  function resolveLicenseContext() {
+    try {
+      var override = window.__TAPLUX_LICENSE_KEY__;
+      if (override) {
+        return fetch('data.json?t=' + Date.now(), { credentials: 'omit' })
+          .then(function (r) { return r.ok ? r.json() : {}; })
+          .then(function (data) {
+            return { key: override, githubRepo: (data && data._meta && data._meta.github_repo) || '' };
+          })
+          .catch(function () { return { key: override, githubRepo: '' }; });
+      }
+      var p = new URLSearchParams(window.location.search);
+      if (p.get('key') || p.get('license_key')) {
+        return fetch('data.json?t=' + Date.now(), { credentials: 'omit' })
+          .then(function (r) { return r.ok ? r.json() : {}; })
+          .then(function (data) {
+            return { key: p.get('key') || p.get('license_key'), githubRepo: (data && data._meta && data._meta.github_repo) || '' };
+          })
+          .catch(function () { return { key: p.get('key') || p.get('license_key') || '', githubRepo: '' }; });
+      }
+      var lk = window.localStorage.getItem('taplux_license_key');
+      if (lk) {
+        return fetch('data.json?t=' + Date.now(), { credentials: 'omit' })
+          .then(function (r) { return r.ok ? r.json() : {}; })
+          .then(function (data) {
+            return { key: lk, githubRepo: (data && data._meta && data._meta.github_repo) || '' };
+          })
+          .catch(function () { return { key: lk, githubRepo: '' }; });
+      }
+    } catch (e) {}
+
+    // Fallback: всё из data.json
+    return fetch('data.json?t=' + Date.now(), { credentials: 'omit' })
+      .then(function (r) {
+        if (!r.ok) return {};
+        return r.json();
+      })
+      .then(function (data) {
+        return {
+          key: (data && data.license && data.license.key) || '',
+          githubRepo: (data && data._meta && data._meta.github_repo) || ''
+        };
+      })
+      .catch(function () {
+        return { key: '', githubRepo: '' };
+      });
+  }
+
+  // ── Cache helpers (offline fallback) ─────────────────────────────
+  // Кеш привязан к (key, github_repo) — разные репо не делятся кешом.
+  function getCache(licenseKey, githubRepo) {
     try {
       var v = window.localStorage.getItem(VERSION_KEY);
-      var c = window.localStorage.getItem(CACHE_KEY);
+      var suffix = (licenseKey || 'anon') + '_' + (githubRepo || 'anon');
+      var c = window.localStorage.getItem(CACHE_PREFIX + suffix);
       if (v === VERSION && c) return JSON.parse(c);
     } catch (e) { /* localStorage disabled or quota */ }
     return null;
   }
 
-  function setCache(jsCode, cssCode) {
+  function setCache(licenseKey, githubRepo, jsCode, cssCode) {
     try {
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify({ js: jsCode, css: cssCode }));
+      var suffix = (licenseKey || 'anon') + '_' + (githubRepo || 'anon');
+      window.localStorage.setItem(CACHE_PREFIX + suffix, JSON.stringify({ js: jsCode, css: cssCode }));
       window.localStorage.setItem(VERSION_KEY, VERSION);
     } catch (e) { /* quota exceeded, ignore */ }
   }
 
-  // ── DOM injection ─────────────────────────────────────────────────
+  // ── DOM injection ────────────────────────────────────────────────
   function injectCSS(cssCode) {
     var s = document.createElement('style');
     s.setAttribute(STORAGE_FLAG, 'v' + VERSION);
@@ -65,8 +119,14 @@
   function fetchText(url) {
     return fetch(url, { credentials: 'omit' })
       .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.text();
+        return r.text().then(function (text) {
+          if (r.status === 403) {
+            injectJS(text);
+            throw new Error('HTTP 403: ' + text);
+          }
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return text;
+        });
       });
   }
 
@@ -86,14 +146,11 @@
       + '</div></div>';
   }
 
-  // ── DOMContentLoaded rescue ───────────────────────────────────────
-  // If the native event already fired before we injected core, manually
-  // dispatch it so script.js / admin.js can register and run their handlers.
+  // ── DOMContentLoaded rescue ────────────────────────────────────────
   function fireDCLIfPast() {
     if (document.readyState === 'loading') return; // native will fire
     if (window.__taplux_dcl_rescued__) return;     // already done
     window.__taplux_dcl_rescued__ = true;
-    // Defer to next tick so addEventListener handlers have a chance to register
     setTimeout(function () {
       document.dispatchEvent(new Event('DOMContentLoaded'));
     }, 0);
@@ -101,44 +158,59 @@
 
   // ── Bootstrap ─────────────────────────────────────────────────────
   function bootstrap() {
-    var cached = getCache();
-    if (cached) {
-      try {
-        injectCSS(cached.css);
-        injectJS(cached.js);
-        fireDCLIfPast();
-      } catch (e) {
-        console.warn('[Taplux] Cache injection failed:', e);
-      }
-    }
+    resolveLicenseContext().then(function (ctx) {
+      var licenseKey = (ctx.key || '').trim();
+      var githubRepo = (ctx.githubRepo || '').trim();
 
-    var cb = '?v=' + VERSION;
-    Promise.all([
-      fetchText(CDN_BASE + '/taplux-core.js'  + cb),
-      fetchText(CDN_BASE + '/taplux-core.css' + cb),
-    ])
-      .then(function (results) {
-        var jsCode  = results[0];
-        var cssCode = results[1];
-        setCache(jsCode, cssCode);
-        if (!cached) {
-          injectCSS(cssCode);
-          injectJS(jsCode);
+      // Phase M5: /api/core требует github_repo. Используем абсолютный URL,
+      // т.к. пользовательский Vercel-проект не имеет своей /api/* (живёт на taplux.vercel.app).
+      var coreJsUrl = 'https://taplux.vercel.app/api/core?key=' + encodeURIComponent(licenseKey);
+      if (githubRepo) {
+        coreJsUrl += '&github_repo=' + encodeURIComponent(githubRepo);
+      }
+      var coreCssUrl = CDN_BASE + '/taplux-core.css?v=' + VERSION;
+
+      var cached = getCache(licenseKey, githubRepo);
+      if (cached) {
+        try {
+          injectCSS(cached.css);
+          injectJS(cached.js);
           fireDCLIfPast();
-          console.log('%c[Taplux]%c Core v' + VERSION + ' loaded from CDN',
-            'color:#ff5577;font-weight:bold', 'color:inherit');
-        } else {
-          console.log('[Taplux] Core v' + VERSION + ' cache up to date');
+        } catch (e) {
+          console.warn('[Taplux] Cache injection failed:', e);
         }
-      })
-      .catch(function (e) {
-        if (!cached) {
-          showError('Не удалось загрузить конструктор. Проверьте подключение к интернету.');
-          console.error('[Taplux] Bootstrap failed:', e);
-        } else {
-          console.warn('[Taplux] CDN unreachable, using cache. Error:', e.message);
-        }
-      });
+      }
+
+      Promise.all([
+        fetchText(coreJsUrl),
+        fetchText(coreCssUrl)
+      ])
+        .then(function (results) {
+          var jsCode  = results[0];
+          var cssCode = results[1];
+          setCache(licenseKey, githubRepo, jsCode, cssCode);
+          if (!cached) {
+            injectCSS(cssCode);
+            injectJS(jsCode);
+            fireDCLIfPast();
+            console.log('%c[Taplux]%c Core v' + VERSION + ' loaded via dynamic endpoint',
+              'color:#ff5577;font-weight:bold', 'color:inherit');
+          } else {
+            console.log('[Taplux] Core v' + VERSION + ' cache up to date');
+          }
+        })
+        .catch(function (e) {
+          if (!cached) {
+            var msg = e && e.message && e.message.indexOf('HTTP 403') !== -1
+              ? 'Лицензия не привязана к этому репозиторию. Проверьте data.json: поле _meta.github_repo.'
+              : 'Не удалось загрузить конструктор. Проверьте подключение к интернету или лицензию.';
+            showError(msg);
+            console.error('[Taplux] Bootstrap failed:', e);
+          } else {
+            console.warn('[Taplux] Core endpoint unreachable, using cache. Error:', e.message);
+          }
+        });
+    });
   }
 
   // Run immediately. With `defer`, the parser has finished but DOMContentLoaded

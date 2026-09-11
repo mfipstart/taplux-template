@@ -1,4 +1,7 @@
 {
+  "_meta": {
+    "github_repo": "your-username/your-repo-name"
+  },
   "design": {
     "page_bg": "#0a0a0f",
     "container_pt_pc": 60,
